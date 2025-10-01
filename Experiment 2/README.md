@@ -1,12 +1,22 @@
-# Experiment 2 – Polygon Scan Conversion & Flood Fill
+# Experiment 2 – Polygon Scan Conversion and Flood-Fill
 
-### Aim
-- Draw a polygon using **Bresenham’s line algorithm**  
-- Fill the interior using a **flood-fill algorithm**  
+![Python](https://img.shields.io/badge/Python-3.x-blue)
+![Matplotlib](https://img.shields.io/badge/Matplotlib-Plotting-green)
 
-### File
-- `experiment2_polygon_fill.py` – Draws a polygon and fills it  
+---
 
-### How to Run
+## 🎯 Aim
+- Implement **scan conversion** of a polygon.  
+- Use **flood-fill algorithms** to fill the polygon area in a graphics window.
+
+---
+
+## 📂 File
+- `polygon_fill.py` – Demonstrates polygon scan conversion and flood-fill.
+
+---
+
+## ⚙️ How to Run
+
 ```bash
-python experiment2_polygon_fill.py
+python polygon_fill.py
