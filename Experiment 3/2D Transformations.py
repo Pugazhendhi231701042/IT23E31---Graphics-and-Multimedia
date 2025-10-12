@@ -1,62 +1,67 @@
-import matplotlib.pyplot as plt
 import numpy as np
+import matplotlib.pyplot as plt
 
-# ---------------- Functions for Transformations -----------------
-def translate(vertices, tx, ty):
+def draw_shape(points, label, color):
+    """Draws a closed 2D shape."""
+    # Append the first point to close the shape
+    x, y = zip(*points)
+    x += (x[0],)
+    y += (y[0],)
+    plt.plot(x, y, color=color, label=label)
+
+def apply_transform(points, matrix):
+    """Applies a 3x3 homogeneous transformation matrix to a list of (x, y) points."""
+    transformed = []
+    for x, y in points:
+        # Convert (x, y) to homogeneous vector [x, y, 1]
+        vec = np.array([x, y, 1])
+        # Apply transformation: result = matrix @ vec
+        result = matrix @ vec
+        # Convert back to Cartesian coordinates (result[0], result[1])
+        transformed.append((result[0], result[1]))
+    return transformed
+
+def translate(points, tx, ty):
+    """Returns the translation transformation matrix and applies it."""
     T = np.array([[1, 0, tx],
                   [0, 1, ty],
                   [0, 0, 1]])
-    ones = np.ones((len(vertices), 1))
-    points = np.hstack([vertices, ones])
-    transformed = (T @ points.T).T
-    return transformed[:, :2]
+    return apply_transform(points, T)
 
-def scale(vertices, sx, sy):
+def scale(points, sx, sy):
+    """Returns the scaling transformation matrix and applies it."""
     S = np.array([[sx, 0, 0],
                   [0, sy, 0],
                   [0, 0, 1]])
-    ones = np.ones((len(vertices), 1))
-    points = np.hstack([vertices, ones])
-    transformed = (S @ points.T).T
-    return transformed[:, :2]
+    return apply_transform(points, S)
 
-def rotate(vertices, angle_deg):
-    angle = np.radians(angle_deg)
-    R = np.array([[np.cos(angle), -np.sin(angle), 0],
-                  [np.sin(angle),  np.cos(angle), 0],
+def rotate(points, angle_deg):
+    """Returns the rotation transformation matrix and applies it (around origin)."""
+    angle_rad = np.radians(angle_deg)
+    R = np.array([[np.cos(angle_rad), -np.sin(angle_rad), 0],
+                  [np.sin(angle_rad), np.cos(angle_rad), 0],
                   [0, 0, 1]])
-    ones = np.ones((len(vertices), 1))
-    points = np.hstack([vertices, ones])
-    transformed = (R @ points.T).T
-    return transformed[:, :2]
+    return apply_transform(points, R)
 
-# ---------------- Plot Function -----------------
-def plot_shape(vertices, title):
-    vertices = np.vstack([vertices, vertices[0]])  # close shape
-    plt.plot(vertices[:,0], vertices[:,1], marker='o')
-    plt.title(title)
-    plt.grid(True)
+# Main Execution
+triangle = [(0, 0), (100, 0), (50, 80)] # Original triangle vertices
 
-# ---------------- Main Program -----------------
-if __name__ == "__main__":
-    # Example shape: triangle
-    triangle = np.array([[0,0], [2,0], [1,2]])
+# Transformations
+translated = translate(triangle, 120, 50)
+scaled = scale(triangle, 1.5, 1.5)
+rotated = rotate(triangle, 45) # 45 degrees rotation
 
-    plt.figure(figsize=(12,4))
+# Plotting
+plt.figure(figsize=(8, 8))
+draw_shape(triangle, "Original", 'blue')
+draw_shape(translated, "Translated", 'green')
+draw_shape(scaled, "Scaled", 'orange')
+draw_shape(rotated, "Rotated", 'red')
 
-    # Original
-    plt.subplot(1,3,1)
-    plot_shape(triangle, "Original Triangle")
-
-    # Translated
-    translated = translate(triangle, tx=3, ty=1)
-    plt.subplot(1,3,2)
-    plot_shape(translated, "Translated Triangle")
-
-    # Scaled and Rotated
-    scaled = scale(triangle, sx=2, sy=0.5)
-    rotated = rotate(scaled, angle_deg=45)
-    plt.subplot(1,3,3)
-    plot_shape(rotated, "Scaled & Rotated Triangle")
-
-    plt.show()
+plt.title("2D Transformations")
+plt.xlabel('X')
+plt.ylabel('Y')
+plt.legend()
+plt.grid(True)
+plt.axis("equal") # Ensure equal scaling for correct visualization
+plt.show()
