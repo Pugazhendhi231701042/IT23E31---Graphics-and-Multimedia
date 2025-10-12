@@ -1,54 +1,83 @@
 import matplotlib.pyplot as plt
 import numpy as np
+from collections import deque
 
-# ---------------- Canvas -----------------
-width, height = 100, 100
-canvas = np.zeros((height, width))  # 0 = background, 1 = boundary, 2 = fill
+width, height = 300, 300
+canvas = np.ones((height, width, 3), dtype=np.uint8) * 255 # White canvas
 
-# ---------------- Bresenham Line -----------------
 def bresenham_line(x1, y1, x2, y2):
+    """Draws a line on the canvas using Bresenham's algorithm (Black line)."""
+    x1, y1, x2, y2 = int(x1), int(y1), int(x2), int(y2)
     dx = abs(x2 - x1)
     dy = abs(y2 - y1)
-    sx = 1 if x1 < x2 else -1
-    sy = 1 if y1 < y2 else -1
-    err = dx - dy
     x, y = x1, y1
+    sx = 1 if x2 > x1 else -1
+    sy = 1 if y2 > y1 else -1
 
-    while True:
-        canvas[y, x] = 1
-        if x == x2 and y == y2:
-            break
-        e2 = 2 * err
-        if e2 > -dy:
+    if dx > dy:
+        err = dx / 2
+        while x != x2:
+            canvas[y, x] = [0, 0, 0] # Set pixel to black
             err -= dy
+            if err < 0:
+                y += sy
+                err += dx
             x += sx
-        if e2 < dx:
-            err += dx
+    else:
+        err = dy / 2
+        while y != y2:
+            canvas[y, x] = [0, 0, 0] # Set pixel to black
+            err -= dx
+            if err < 0:
+                x += sx
+                err += dy
             y += sy
+    canvas[y, x] = [0, 0, 0] # Final point
 
-# ---------------- Draw Polygon -----------------
 def draw_polygon(vertices):
-    n = len(vertices)
-    for i in range(n):
+    """Draws a polygon by connecting its vertices with lines."""
+    for i in range(len(vertices)):
         x1, y1 = vertices[i]
-        x2, y2 = vertices[(i+1)%n]
+        x2, y2 = vertices[(i + 1) % len(vertices)]
         bresenham_line(x1, y1, x2, y2)
 
-# ---------------- Flood Fill -----------------
-def flood_fill(x, y):
-    if canvas[y, x] != 0:
+def flood_fill_iter(x, y, target_color, fill_color):
+    """Iterative Flood-Fill Algorithm using a deque (Breadth-First Search)."""
+    target = np.array(target_color, dtype=np.uint8)
+    fill = np.array(fill_color, dtype=np.uint8)
+
+    # Check bounds and initial color
+    if x < 0 or x >= width or y < 0 or y >= height:
         return
-    canvas[y, x] = 2
-    flood_fill(x+1, y)
-    flood_fill(x-1, y)
-    flood_fill(x, y+1)
-    flood_fill(x, y-1)
+    if not np.array_equal(canvas[y, x], target):
+        return
 
-# ---------------- Main -----------------
-polygon = [(20,20), (80,20), (70,70), (30,60)]
-draw_polygon(polygon)
-flood_fill(50, 30)
+    q = deque([(x, y)])
+    
+    while q:
+        cx, cy = q.popleft()
+        
+        # Simple bounds check, more rigorous checks are better for real apps
+        if cx < 0 or cx >= width or cy < 0 or cy >= height:
+            continue
+            
+        if np.array_equal(canvas[cy, cx], target):
+            canvas[cy, cx] = fill_color
+            
+            # Add neighbors to queue (4-connected)
+            q.append((cx + 1, cy))
+            q.append((cx - 1, cy))
+            q.append((cx, cy + 1))
+            q.append((cx, cy - 1))
 
-plt.imshow(canvas, cmap='viridis', origin='lower')
-plt.title("Polygon with Flood Fill")
+# Main Execution
+vertices = [(50, 50), (250, 50), (200, 200), (100, 250), (50, 150)]
+draw_polygon(vertices)
+
+# Fill the polygon: seed point (150, 100), target color white (255, 255, 255), fill color red (255, 0, 0)
+flood_fill_iter(150, 100, [255, 255, 255], [255, 0, 0])
+
+plt.imshow(canvas)
+plt.title("Polygon Fill using Flood-Fill Algorithm (Iterative)")
+plt.axis('off')
 plt.show()
